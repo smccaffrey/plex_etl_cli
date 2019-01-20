@@ -35,17 +35,16 @@ parser.add_argument('--extract', help = 'Extract all media files', action = 'sto
 parser.add_argument('--transform', action = 'store_true')
 parser.add_argument('--test', help = 'Test pipeline for Errors, without actually changing things.', action = 'store_true')
 parser.add_argument('--insert_test_movies', action = 'store_true')
-
+parser.add_argument('--test_parse', action = 'store_true', help = 'Test if movies can be parsed and renamed.',)
 
 args = parser.parse_args()
 
-MOVIES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies')
-DUMP_DIR = os.path.join(MOVIES_DIR, '1_dump')
-EXTRACTED_DIR = os.path.join(MOVIES_DIR, '2_extracted')
-TRANSOFRMED_DIR = os.path.join(MOVIES_DIR, '3_transformed')
-ERROR_DIR = os.path.join(MOVIES_DIR, '4_error')
-ENCODING_DIR = os.path.join(MOVIES_DIR, '5_encoding_queue')
-
+#MOVIES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies')
+#DUMP_DIR = os.path.join(MOVIES_DIR, '1_dump')
+#EXTRACTED_DIR = os.path.join(MOVIES_DIR, '2_extracted')
+#TRANSOFRMED_DIR = os.path.join(MOVIES_DIR, '3_transformed')
+#ERROR_DIR = os.path.join(MOVIES_DIR, '4_error')
+#ENCODING_DIR = os.path.join(MOVIES_DIR, '5_encoding_queue')
 
 def initialize_movies_dirs():
 	root = 'movies'
@@ -55,15 +54,26 @@ def initialize_movies_dirs():
 		if not os.path.exists(path):
 			os.makedirs(path)
 
+def _check_movies_initialize():
+	root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies')
+	if not os.path.exists(root_path):
+		return False
+	return True
+
+
 def extract_movies():
-	movies_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies')
-	dump_dir = os.path.join(movies_dir, '1_dump')
-	extracted_dir = os.path.join(movies_dir, '2_extracted')
-	for file in os.listdir(dump_dir):
-		current = os.path.join(dump_dir, file)
-		new = os.path.join(extracted_dir, file)
-		shutil.move(current, new)
-	return
+	if _check_movies_initialize():
+		movies_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies')
+		dump_dir = os.path.join(movies_dir, '1_dump')
+		extracted_dir = os.path.join(movies_dir, '2_extracted')
+		i = 0
+		for file in os.listdir(dump_dir):
+			current = os.path.join(dump_dir, file)
+			new = os.path.join(extracted_dir, file)
+			shutil.move(current, new)
+			i += 1
+		return "\n{} movies found, and moved to 2_extracted.\n".format(i)
+	return "\nExtract FAILED. Make sure to run --initialize FIRST!\n"
 
 def transform_movies():
 
@@ -91,15 +101,46 @@ def transform_movies():
 				k += 1
 	return
 
+def _parsable(title):
+	info = PTN.parse(title)
+	i,j = 0,0
+	try:
+		if info['title'] and info['year']:
+			i += 1
+			return True
+		#return False
+	except Exception as e:
+		if isinstance(e, KeyError):
+			return False
+
+def _parse_movie(title):
+	info = PTN.parse(title)
+	new_title = info['title'] + " " + "(" + str(info['year']) + ")"
+	return new_title
+
+
+def test_movies_parse():
+	root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies', '2_extracted')
+	tcnt, fcnt = 0, 0
+	passed, failed = [], []
+	for file in os.listdir(root_path):
+		if _parsable(file):
+			tcnt += 1
+			passed.append(file)
+		else:
+			fcnt += 1
+			failed.append(file)
+	return "\n{} movies tested. {} PASSED / {} FAILED\n\nFAILED LIST: {}\n".format(tcnt + fcnt, tcnt, fcnt, failed)
+
 def insert_test_movies():
 	root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies', '1_dump')
-	if not os.path.exists(root_path):
-		return "Movie directory '1_dump' does not exist. Need to --initialize"
-	for test_file in test_values.test_files_movies:
-		test_file_path = os.path.join(root_path, test_file + '.mp4')
-		print(test_file_path)
-		os.mknod(test_file_path)
-	return "Test movies inserted into ETL directories."
+	if _check_movies_initialize():
+		for test_file in test_values.test_files_movies:
+			test_file_path = os.path.join(root_path, repr(test_file) + '.mp4')
+			os.mknod(test_file_path)
+			print(test_file)
+		return "Test movies inserted into ETL directories."
+	return "Test FAILED. Make sure to run --initialize FIRST!"
 	
 
 if __name__ == '__main__':
@@ -115,8 +156,11 @@ if __name__ == '__main__':
 			insert_test_movies()
 
 		if args.extract:
-			print('Exatracting Movies.')
-			extract_movies()
+			#print('Exatracting Movies.')
+			print(extract_movies())
+
+		if args.test_parse:
+			print(test_movies_parse())
 
 		if args.transform:
 			print('Transform called')

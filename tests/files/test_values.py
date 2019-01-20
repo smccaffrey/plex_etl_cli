@@ -11,6 +11,5 @@ test_files_movies = [
   "UFC.179.PPV.HDTV.x264-Ebi[rartv]",
   "X-Men.Days.of.Future.Past.2014.1080p.WEB-DL.DD5.1.H264-RARBG",
   "Guardians Of The Galaxy 2014 R6 720p HDCAM x264-JYK",
-  "Guardians of the Galaxy (CamRip / 2014)",
   "Brave.2012.R5.DVDRip.XViD.LiNE-UNiQUE",
 ]
