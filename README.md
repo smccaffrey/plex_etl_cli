@@ -15,8 +15,7 @@ Intitialize the pipeline. You will be prompted to specify where your plex librar
 ```sh
 $ python plex_etl.py --pipe movies --initialize
 ```
-A directory called movies will be created in the cwd, with sub directories ['1_dump', '2_extracted', '3_transformed', '4_error', '5_encoding_queue']
-Place all raw movie rips/torrents in '1_dump'.
+A directory called movies will be created in the cwd, with sub directories ['1_dump', '2_extracted', '3_transformed', '4_error', '5_encoding_queue']. Place all raw movie rips/torrents in '1_dump'.
 
 Extract all movie files.
 ```sh
