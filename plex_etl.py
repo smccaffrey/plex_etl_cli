@@ -54,11 +54,12 @@ def extract_movies():
 		dump_dir = os.path.join(movies_dir, '1_dump')
 		extracted_dir = os.path.join(movies_dir, '2_extracted')
 		i = 0
-		for file in os.listdir(dump_dir):
-			current = os.path.join(dump_dir, file)
-			new = os.path.join(extracted_dir, file)
-			shutil.move(current, new)
-			i += 1
+		for root, dirs, files in os.walk(dump_dir):
+			for file in files:
+				current = os.path.join(root, file)
+				new = os.path.join(extracted_dir, file)
+				shutil.move(current, new)
+				i += 1
 		return "\n{} movies found, and moved to 2_extracted.\n".format(i)
 	return "\nExtract FAILED. Make sure to run --initialize FIRST!\n"
 
