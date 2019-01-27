@@ -70,7 +70,7 @@ def transform_movies():
 	i, j = 0, 0
 	for movie in os.listdir(extracted):
 		old_path = os.path.join(extracted, movie)
-		if _parsable(movie):
+		if _parsable(movie) and (movie.endswith('.mp4') or movie.endswith('.mkv') or movie.endswith('.avi')):
 			title = _parse_movie(movie)
 			old_path = os.path.join(extracted, movie)
 			new_path = os.path.join(transformed, title)
