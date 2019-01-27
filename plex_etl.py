@@ -4,8 +4,8 @@ import os, sys, shutil, time
 import PTN
 import argparse
 
-from subprocess import call
-from pathlib import Path
+#from subprocess import call
+#from pathlib import Path
 
 from tests.files import test_values
 
