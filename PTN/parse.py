@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Credit to https://pypi.org/user/divijbindlish/ for this class
 
 import re
 from .patterns import patterns, types
