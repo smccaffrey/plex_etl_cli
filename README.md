@@ -15,7 +15,7 @@ Intitialize the pipeline. You will be prompted to specify where your plex librar
 ```sh
 $ python plex_etl.py --pipe movies --initialize
 ```
-A directory called movies will be created in the cwd, with sub directories ['1_dump', '2_extracted', '3_transformed', '4_error', '5_encoding_queue']. Place all raw movie rips/torrents in '1_dump'.
+A directory called movies will be created in the cwd, with sub directories ```1_dump```, ```2_extracted```, ```3_transformed```, ```4_error```, ```5_encoding_queue```. Place all raw movie rips/torrents in ```1_dump```.
 
 Extract all movie files.
 ```sh
@@ -29,14 +29,20 @@ Transform all movie files
 ```sh
 $ python plex_etl.py --pipe movies --transform
 ```
-Load all transformed movies in PLEX_MEDIA_LIBRARY
+Load all transformed movies in ```PLEX_MEDIA_LIBRARY```
 ```sh
 $ python plex_etl.py --pipe movies --load
 ```
-
+Cleanup all ETL directories in the movies pipeline
+```sh
+$ python plex_etl.py --pipe movies --cleanup
+```
 
 
 ## Versions
+
+### v1.0.1
+* added ```cleanup()``` function remove old directories and file from ```1_dump``` and ```2_extracted``` from the ```movies``` pipe
 
 ### v1.0.0
 * Created initial functionality

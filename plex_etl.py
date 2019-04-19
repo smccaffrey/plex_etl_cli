@@ -1,11 +1,13 @@
 
 
-import os, sys, shutil, time
+import os 
+import sys 
+import shutil 
+import time
 import PTN
 import argparse
 
-#from subprocess import call
-#from pathlib import Path
+from pathlib import Path
 
 from tests.files import test_values
 
@@ -18,11 +20,14 @@ parser.add_argument('--initialize', help = 'Build directory structure required b
 parser.add_argument('--extract', help = 'Extract all media files', action = 'store_true')
 parser.add_argument('--transform', action = 'store_true')
 parser.add_argument('--load', action = 'store_true')
+parser.add_argument('--cleanup', action = 'store_true')
 parser.add_argument('--test', help = 'Test pipeline for Errors, without actually changing things.', action = 'store_true')
 parser.add_argument('--insert_test_movies', action = 'store_true')
 parser.add_argument('--test_parse', action = 'store_true', help = 'Test if movies can be parsed and renamed.')
 
 args = parser.parse_args() 
+
+media_ftypes = ['']
 
 def initialize():
 	user_input = input('Enter full path Plex Movie Library: ')
@@ -98,6 +103,22 @@ def load_movies():
 		i += 1
 	return "\n{} movies created.".format(i)
 
+def cleanup():
+	movies_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies')
+	dump_dir = os.path.join(movies_dir, '1_dump')
+	extracted_dir = os.path.join(movies_dir, '2_extracted')
+	i = 0
+	for root, dirs, files in os.walk(dump_dir):
+		for _dir in dirs:
+			os.rmdir(os.path.join(root, _dir))
+			i += 1
+	j = 0
+	for root, dirs, files in os.walk(extracted_dir):
+		for file in files:
+			os.unlink(os.path.join(root,file))
+			j += 1
+	return "\nRemoved {} directories from 1_dump\n\nRemoved {} files from 2_extracted".format(i, j)
+
 def _is_movie_library_known():
 	info_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plex_info.txt')
 	file = open(info_file, 'r')
@@ -147,9 +168,10 @@ def insert_test_movies():
 	root_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'movies', '1_dump')
 	if _check_movies_initialize():
 		for test_file in test_values.test_files_movies:
-			test_file_path = os.path.join(root_path, str(test_file) + '.mp4') 
-			os.mknod(test_file_path)
-			print(test_file)
+			test_file_dir = os.path.join(root_path, test_file)
+			test_file_path = os.path.join(root_path, test_file, str(test_file) + '.mp4')
+			os.mkdir(test_file_dir)
+			Path(test_file_path).touch()
 		return "Test movies inserted into ETL directories."
 	return "Test FAILED. Make sure to run --initialize FIRST!"
 	
@@ -179,6 +201,9 @@ if __name__ == '__main__':
 
 		if args.load:
 			print(load_movies())
+
+		if args.cleanup:
+			print(cleanup())
 
 		
 
