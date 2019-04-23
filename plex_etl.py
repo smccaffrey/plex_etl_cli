@@ -4,11 +4,12 @@ import os
 import sys 
 import shutil 
 import time
-import PTN
+import json
 import argparse
+import datetime
+import PTN
 
 from pathlib import Path
-
 from tests.files import test_values
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__)) + "/"
@@ -24,20 +25,76 @@ parser.add_argument('--cleanup', action = 'store_true')
 parser.add_argument('--test', help = 'Test pipeline for Errors, without actually changing things.', action = 'store_true')
 parser.add_argument('--insert_test_movies', action = 'store_true')
 parser.add_argument('--test_parse', action = 'store_true', help = 'Test if movies can be parsed and renamed.')
+parser.add_argument('--test_tv_map', action = 'store_true')
+
 
 args = parser.parse_args() 
 
-media_ftypes = ['']
+def initialize_plex_info():
+	info_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plex_info.json')
+	if not os.path.exists(info_file):
+		file = open(info_file, 'w')
+		json.dump({'GENERATED_AT' : str(datetime.datetime.now())}, file)
+		file.close()
 
-def initialize():
-	user_input = input('Enter full path Plex Movie Library: ')
-	info_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plex_info.txt') 
-	while not os.path.exists(user_input):
-		print('{} does not exist'.format(user_input))
-		user_input = input('Enter full path Plex Movie Library: ')
-	file = open(info_file, 'w')
-	file.write('PLEX_MOVIE_LIBRARY={}'.format(user_input))
-	file.close()
+def _write_to_plex_info(data: dict):
+	info_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plex_info.json')
+	with open(info_file, 'r') as old:
+		info = json.load(old)
+	info.update(data)
+	with open(info_file, 'w') as new:
+		json.dump(info, new) 
+
+def initialize_movies():
+	path_to_movies = input('Enter full path Plex Movie Library: ')
+	info_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plex_info.txt')
+	while not os.path.exists(path_to_movies):
+		print('{} does not exist'.format(path_to_movies))
+		path_to_movies = input('Enter full path Plex Movie Library: ')
+	data = {'PLEX_MOVIE_LIBRARY' : str(path_to_movies)}
+	_write_to_plex_info(data)
+
+def initialize_tvshows():
+	path_to_tvshows = input('Enter full path TV Show Library: ')
+	data = {}
+	while not os.path.exists(path_to_tvshows):
+		print('{} does not exist'.format(path_to_tvshows))
+		path_to_tvshows = input('Enter full path TV Show Library: ')
+	data = {'PLEX_TVSHOWS_LIBRARY' : str(path_to_tvshows)}
+	_write_to_plex_info(data)
+
+def _map_tv_shows():
+	info = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plex_info.json')
+	with open(info, 'r') as f:
+		data = json.load(f)
+
+	print(data['PLEX_TVSHOWS_LIBRARY'], type(data['PLEX_TVSHOWS_LIBRARY']))
+	titles = []
+	for root, dirs, files in os.walk(data['PLEX_TVSHOWS_LIBRARY']):
+		sub_root = root.replace(data['PLEX_TVSHOWS_LIBRARY'], "")
+		#print(sub_root)
+		print(sub_root.split('/'), len(sub_root.split('/')) == 1)
+		if len(sub_root.split('/')) == 1:
+			title = "no_title"
+		else:
+			title = sub_root.split('/')[1]
+		titles.append(title)
+		#print(title, len(title))
+		total_depth = len(root.split('/'))
+		sub_depth = len(sub_root.split('/'))
+		#print(title, total_depth, sub_depth)
+		#for dr in dirs:
+		#	print(root + "\t----->" + dr)
+	#print(titles)
+	#print(data['PLEX_TVSHOWS_LIBRARY'])
+
+def initialize_tvshows_dirs():
+	root = 'tvshows'
+	sub_dirs = ['1_dump', '2_extracted', '3_transformed', '4_error', '5_encoding_queue']
+	for sub_dir in sub_dirs:
+		path = os.path.join(os.path.dirname(os.path.realpath(__file__)), root, sub_dir)
+		if not os.path.exists(path):
+			os.makedirs(path)
 
 def initialize_movies_dirs():
 	root = 'movies'
@@ -174,16 +231,22 @@ def insert_test_movies():
 			Path(test_file_path).touch()
 		return "Test movies inserted into ETL directories."
 	return "Test FAILED. Make sure to run --initialize FIRST!"
-	
+
+def update_from_repo():
+	"""Update from github repo
+	"""
+	return	
 
 if __name__ == '__main__':
+
+	initialize_plex_info()
 
 	if args.pipe == 'movies':
 		print('Movies ETL pipeline chosen')
 
 		if args.initialize:
 			print('initializing directory structure for staging movies')
-			initialize()
+			initialize_movies()
 			initialize_movies_dirs()
 
 		if args.insert_test_movies:
@@ -205,6 +268,15 @@ if __name__ == '__main__':
 		if args.cleanup:
 			print(cleanup())
 
+	if args.pipe == 'tv_shows':
+		print('TV Shows ETL pipeline chosen')
+
+		if args.initialize:
+			initialize_tvshows()
+			initialize_tvshows_dirs()
+
+		if args.test_tv_map:
+			_map_tv_shows()
 		
 
 
