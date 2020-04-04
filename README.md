@@ -1,3 +1,5 @@
+This project has been converted to a Flask Application https://github.com/smccaffrey/plex-etl
+
 # Plex ETL Command Line Tool
 This tool was originally designed for personal use, but after some refactoring efforts it will hopefully
 make your media loading process into PLEX a lot easier.
